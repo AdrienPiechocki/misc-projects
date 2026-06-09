@@ -38,34 +38,51 @@ Voici des exemples d'utilisation détaillés et concrets, un pour chaque script,
 
 ---
 
-### Usage Examples
+This is a well-structured overview of your Python Automation Suite. Below is the finalized **Usage** section, formatted to fit seamlessly into your existing `README.md` file.
+
+---
+
+## Usage
+
+Below are detailed examples for utilizing each script in the suite. Ensure you have installed the required dependencies and configured your environment before running these commands.
+
+### 1. Web Scrapers
 
 * **`article_scraper_js.py`**
-* *Scraping dynamique :* Pour extraire le contenu d'un article :
+* *Dynamic Scraping:* Extract content from a complex, JavaScript-rendered web page.
+
 ```bash
 python article_scraper_js.py "https://tech-blog.com/post-123"
 ```
 
 * **`pixabay_music_scraper.py`**
-* *Téléchargement par lots :* Pour télécharger automatiquement les 20 premiers titres de musique "Lo-fi" trouvés sur 5 pages de résultats :
+* *Batch Downloading:* Search for and download the first 20 "Lo-fi" tracks found across 5 pages of results using the Chrome browser.
+
 ```bash
 python pixabay_music_scraper.py "https://pixabay.com/music/search/lofi/" --max-songs 20 --max-pages 5 --browser chrome
 ```
 
 * **`linkedin_scraper.py`**
-* *Recherche ciblée :* Pour lancer une recherche d'emplois basée sur un fichier de configuration personnalisé (`my_jobs.yaml`) :
+* *Targeted Job Search:* Execute a job hunt based on parameters defined in a custom YAML configuration file.
+
 ```bash
 python linkedin_scraper.py --config my_jobs.yaml --output "./linkedin_jobs"
 ```
 
+### 2. Music Tools
+
 * **`playlis_generator.py`**
-* *Génération intelligente :* Pour analyser une bibliothèque musicale locale et créer des playlists `.m3u` en se basant sur les caractéristiques audio (BPM, humeur) :
+* *Intelligent Playlist Generation:* Analyze a local music directory and create `.m3u` playlists grouped by audio characteristics like BPM and mood.
+
 ```bash
 python playlis_generator.py --folder "/home/user/Music/Jazz" --output "./playlists"
 ```
 
+### 3. Text Summarization
+
 * **`summarize_article.py`**
-* *Résumé complet :* Pour récupérer directement une page web et générer un résumé synthétique de l'article :
+* *Automated Summarization:* Fetch a long-form article directly from a URL and generate a synthetic summary representing 30% of the original content.
+
 ```bash
 python summarize_article.py "https://news.com/long-article" --ratio 0.3
 ```
