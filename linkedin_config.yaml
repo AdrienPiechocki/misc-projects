@@ -1,0 +1,72 @@
+# Configuration de la recherche d'emploi LinkedIn
+# ------------------------------------------------
+
+search:
+  # Mots-clés de recherche (au moins un requis)
+  keywords:
+    - "Python Developper"
+    - "Backend Developper"
+    - "Software Engineer"
+    - "DevOps Linux"
+    - "Game Developper"
+
+  # Localisation
+  location: "Paris, France"
+
+  # Nombre max d'offres à scraper par recherche
+  max_jobs_per_keyword: 10
+  
+  # Nombre max d'offres par entreprise (évite qu'un gros recruteur monopolise les résultats)
+  max_jobs_per_company: 2
+
+  # Filtres LinkedIn (optionnels)
+  filters:
+    # Type de poste: "full_time", "part_time", "contract", "temporary", "internship"
+    job_type: "full_time"
+    # Ancienneté: "internship", "entry_level", "associate", "mid_senior_level", "director"
+    experience_level: "entry_level"
+    # Télétravail: "on_site", "remote", "hybrid"
+    work_type: "hybrid"
+    # Date de publication: "past_24h", "past_week", "past_month"
+    date_posted: "past_week"
+
+# Mots-clés à exclure (titre ou description contenant ces termes seront ignorés)
+exclude_keywords:
+  - "Manager"
+  - "Lead"
+  - "Director"
+  - "Senior"
+  - "Stage"
+  - "Alternance"
+  - "Finance"
+
+# Compétences requises (pour scorer les offres)
+required_skills:
+  - "Python"
+  - "Linux"
+  - "Bash"
+  - "QML"
+  - "JavaScript"
+  - "C#"
+  - "Godot"
+  - "Unity"
+
+# Compétences bonus (augmentent le score)
+bonus_skills:
+  - "Git"
+  - "Docker"
+  - "Accessibilité"
+  - "Open Source"
+
+# Sortie
+output:
+  csv_file: "jobs_output.csv"
+  json_file: "jobs_output.json"
+  # Ne garder que les offres avec score >= min_score (0 = toutes)
+  min_score: 0
+
+# Anti-détection: délais aléatoires en secondes
+delays:
+  between_jobs: [1.5, 3.5]
+  between_pages: [3.0, 6.0]
+  between_searches: [5.0, 10.0]

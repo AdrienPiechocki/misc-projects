@@ -1,0 +1,16 @@
+httpx
+playwright
+pyyaml
+newspaper3k
+beautifulsoup4
+lxml
+mutagen
+librosa
+numpy
+nltk
+scikit-learn
+numpy
+networkx
+selenium
+webdriver-manager
+requests
