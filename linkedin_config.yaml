@@ -5,10 +5,8 @@ search:
   # Mots-clés de recherche (au moins un requis)
   keywords:
     - "Python Developper"
-    - "Backend Developper"
     - "Software Engineer"
     - "DevOps Linux"
-    - "Game Developper"
 
   # Localisation
   location: "Paris, France"
@@ -17,7 +15,7 @@ search:
   max_jobs_per_keyword: 10
   
   # Nombre max d'offres par entreprise (évite qu'un gros recruteur monopolise les résultats)
-  max_jobs_per_company: 2
+  max_jobs_per_company: 3
 
   # Filtres LinkedIn (optionnels)
   filters:
@@ -45,11 +43,6 @@ required_skills:
   - "Python"
   - "Linux"
   - "Bash"
-  - "QML"
-  - "JavaScript"
-  - "C#"
-  - "Godot"
-  - "Unity"
 
 # Compétences bonus (augmentent le score)
 bonus_skills:
@@ -57,6 +50,11 @@ bonus_skills:
   - "Docker"
   - "Accessibilité"
   - "Open Source"
+  - "Godot"
+  - "Unity"
+  - "QML"
+  - "JavaScript"
+  - "C#"
 
 # Sortie
 output:
