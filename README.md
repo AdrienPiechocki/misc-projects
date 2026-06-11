@@ -6,18 +6,18 @@ A collection of lightweight, efficient, and specialized Python tools for web scr
 
 ### 1. Web Scrapers
 
-* **Article Scraper ([`article_scraper_js.py`](https://www.google.com/search?q=article_scraper_js.py))**: A robust tool to extract article content from web pages, including JavaScript-rendered sites (React, Vue, etc.). It uses a cascade strategy: `newspaper3k` for speed, falling back to `Playwright` + `BeautifulSoup` for complex rendering.
-* **LinkedIn Job Scraper ([`linkedin_scraper.py`](https://www.google.com/search?q=linkedin_scraper.py))**: A "guest-mode" scraper that fetches job listings from LinkedIn without requiring a session or browser login. It utilizes LinkedIn’s public guest API, `httpx`, and `BeautifulSoup`.
-* **Pixabay Music Scraper ([`pixabay_music_scraper.py`](https://www.google.com/search?q=pixabay_music_scraper.py))**: Automates the search and download of music from Pixabay. Includes metadata management (ID3 tags) and parallel download capabilities using `Selenium` and `mutagen`.
+* **Article Scraper (`article_scraper_js.py`)**: A robust tool to extract article content from web pages, including JavaScript-rendered sites (React, Vue, etc.). It uses a cascade strategy: `newspaper3k` for speed, falling back to `Playwright` + `BeautifulSoup` for complex rendering.
+* **LinkedIn Job Scraper (`linkedin_scraper.py`)**: A "guest-mode" scraper that fetches job listings from LinkedIn without requiring a session or browser login. It utilizes LinkedIn’s public guest API, `httpx`, and `BeautifulSoup`.
+* **Pixabay Music Scraper (`pixabay_music_scraper.py`)**: Automates the search and download of music from Pixabay. Includes metadata management (ID3 tags) and parallel download capabilities using `Selenium` and `mutagen`.
 
 ### 2. Music Tools
 
-* **Playlist Generator ([`playlis_generator.py`](https://www.google.com/search?q=playlis_generator.py))**: Scans directories for MP3 files, analyzes their audio characteristics (BPM, energy, mood, key) using `librosa` and `numpy`, and generates `.m3u` playlists based on the audio analysis.
+* **Playlist Generator (`playlist_generator.py`)**: Scans directories for MP3 files, analyzes their audio characteristics (BPM, energy, mood, key) using `librosa` and `numpy`, and generates `.m3u` playlists based on the audio analysis.
 
 ### 3. Text Summarization
 
-* **Summarizer Engine ([`summarizer.py`](https://www.google.com/search?q=summarizer.py))**: A core module implementing the TextRank algorithm. It segments text, computes similarity matrices using TF-IDF and cosine similarity, and ranks sentences to produce concise summaries.
-* **Article Summarizer ([`summarize_article.py`](https://www.google.com/search?q=summarize_article.py))**: A CLI tool that combines the Article Scraper and the Summarizer Engine to fetch an online article and generate a paragraph-by-paragraph summary.
+* **Summarizer Engine (`summarizer.py`)**: A core module implementing the TextRank algorithm. It segments text, computes similarity matrices using TF-IDF and cosine similarity, and ranks sentences to produce concise summaries.
+* **Article Summarizer (`summarize_article.py`)**: A CLI tool that combines the Article Scraper and the Summarizer Engine to fetch an online article and generate a paragraph-by-paragraph summary.
 
 ---
 
