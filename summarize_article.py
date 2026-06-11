@@ -11,7 +11,7 @@ import re
 import argparse
 
 from summarizer import summarize
-from article_scraper_js import scrape
+from article_scraper_js import fetch_article
 
 
 def split_paragraphs(text: str, min_len: int = 150) -> list[str]:
@@ -63,27 +63,20 @@ def main() -> None:
         help="Proportion du texte à conserver par paragraphe (défaut : 0.3)"
     )
     parser.add_argument(
-        "--no-fast", action="store_true",
-        help="Désactive newspaper3k, force Playwright d'emblée"
-    )
-    parser.add_argument(
         "--min-len", type=int, default=150, metavar="N",
         help="Longueur minimale d'un paragraphe (défaut : 150 caractères)"
     )
     args = parser.parse_args()
 
     # ── 1. Scraping ────────────────────────────────────────────────────────────
-    result = scrape(url=args.url, output_json=False, skip_fast=args.no_fast)
+    result = fetch_article(args.url)
 
-    if result is None or not result.text.strip():
+    if result is None:
         print("Impossible de récupérer le contenu de l'article.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"\n── Article : {result.title or args.url}")
-    print(f"── Source extracteur : {result.source}\n")
-
     # ── 2. Découpe en paragraphes ──────────────────────────────────────────────
-    paragraphs = split_paragraphs(result.text, min_len=args.min_len)
+    paragraphs = split_paragraphs(result, min_len=args.min_len)
 
     if not paragraphs:
         print("Aucun paragraphe suffisamment long trouvé.", file=sys.stderr)
