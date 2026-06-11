@@ -11,7 +11,7 @@ import re
 import argparse
 
 from summarizer import summarize
-from article_scraper_js import fetch_article
+from article_scraper import fetch_article
 
 
 def split_paragraphs(text: str, min_len: int = 150) -> list[str]:
