@@ -1,9 +1,6 @@
 httpx
 playwright
 pyyaml
-newspaper3k
-beautifulsoup4
-lxml
 mutagen
 librosa
 numpy
