@@ -6,7 +6,7 @@ A collection of lightweight, efficient, and specialized Python tools for web scr
 
 ### 1. Web Scrapers
 
-* **Article Scraper (`article_scraper.py`)**: A robust tool to extract article content from web pages, including JavaScript-rendered sites (React, Vue, etc.). It uses a cascade strategy: `newspaper3k` for speed, falling back to `Playwright` + `BeautifulSoup` for complex rendering.
+* **Article Scraper (`article_scraper.py`)**: A robust tool to extract article content from web pages.
 * **LinkedIn Job Scraper (`linkedin_scraper.py`)**: A "guest-mode" scraper that fetches job listings from LinkedIn without requiring a session or browser login. It utilizes LinkedIn’s public guest API, `httpx`, and `BeautifulSoup`.
 * **Pixabay Music Scraper (`pixabay_music_scraper.py`)**: Automates the search and download of music from Pixabay. Includes metadata management (ID3 tags) and parallel download capabilities using `Selenium` and `mutagen`.
 
