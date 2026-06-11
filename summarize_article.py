@@ -82,8 +82,7 @@ def main() -> None:
         print("Aucun paragraphe suffisamment long trouvé.", file=sys.stderr)
         sys.exit(1)
 
-    print(f"── {len(paragraphs)} paragraphe(s) détecté(s)\n")
-    sep = "─" * 68
+    print(f"[*] {len(paragraphs)} paragraphe(s) détecté(s)\n")
 
     # ── 3. Résumé par paragraphe ───────────────────────────────────────────────
     for i, para in enumerate(paragraphs, 1):
