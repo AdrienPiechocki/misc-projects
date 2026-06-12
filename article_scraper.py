@@ -8,6 +8,18 @@ import sys
 from playwright.sync_api import sync_playwright
 import trafilatura
 
+def clean_text(raw_text: str) -> str:
+    """Nettoie les doublons et les lignes vides."""
+    paragraphs = raw_text.split('\n')
+    unique_paragraphs = []
+    seen = set()
+    for p in paragraphs:
+        p_clean = p.strip()
+        if p_clean and p_clean not in seen:
+            unique_paragraphs.append(p_clean)
+            seen.add(p_clean)
+    return "\n".join(unique_paragraphs)
+
 def fetch_article(url: str) -> str:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
@@ -23,7 +35,7 @@ def fetch_article(url: str) -> str:
         html,
         favor_precision=True
     )
-    return text
+    return clean_text(text)
 
 def main():
     if len(sys.argv) < 2:
