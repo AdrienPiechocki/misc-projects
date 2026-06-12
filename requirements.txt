@@ -12,3 +12,4 @@ networkx
 selenium
 webdriver-manager
 requests
+trafilatura
