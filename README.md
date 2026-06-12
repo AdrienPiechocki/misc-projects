@@ -49,7 +49,7 @@ Below are detailed examples for utilizing each script in the suite. Ensure you h
 ### 1. Web Scrapers
 
 * **`article_scraper.py`**
-* *Dynamic Scraping:* Extract content from a complex, JavaScript-rendered web page.
+* *Dynamic Scraping:* Extract content from a web page.
 
 ```bash
 python article_scraper.py "https://tech-blog.com/post-123"
