@@ -14,3 +14,4 @@ webdriver-manager
 requests
 trafilatura
 geopandas
+edge-tts

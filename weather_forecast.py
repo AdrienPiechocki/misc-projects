@@ -234,7 +234,7 @@ class OpenMeteoClient:
                     "t_min": round(np.mean([v["tmin"] for v in vals])),
                     "rain": round(np.mean([v["rain"] for v in vals])),
                     "wind": round(np.max([v["wind"] for v in vals])),
-                    "weathercode": round(np.mean([v["code"] for v in vals]))
+                    "weathercode": round([v["code"] for v in vals][1])
                 }
 
             # National stats
@@ -284,7 +284,7 @@ REGION_META = {
 
 WMO_DESCRIPTIONS = {
     0:  "ciel dégagé",       1:  "principalement dégagé",  2:  "partiellement nuageux",
-    3:  "nuageux à couvert", 16: "brume légère",            17: "orages isolés",
+    3:  "couvert",           16: "brume légère",            17: "orages isolés",
     18: "orages locaux",     19: "orages épars",            29: "averses orageuses",
     31: "légèrement nuageux",38: "nébulosité variable",     42: "averses possibles",
     45: "brouillard",        51: "bruine légère",           53: "bruine modérée",
@@ -382,12 +382,12 @@ def generate_bulletin(day: dict, day_label: str = "aujourd'hui"):
 
     lines.append(_pick([
         f"{day_label.capitalize()}, le temps restera majoritairement {dominant} sur une grande partie du pays.",
-        f"Pour {day_label}, l'ambiance sera globalement {dominant}, avec des températures comprises entre {min_abs} et {max_abs}°C.",
+        f"Pour {day_label}, l'ambiance sera globalement {dominant}, avec des températures comprises entre {min_abs} et {max_abs}°.",
         f"Au programme {day_label} : un ciel souvent {dominant}.",
     ]))
 
     lines.append(
-        f"La température moyenne sera de {avg_max}°C."
+        f"La température moyenne sera de {avg_max}°."
     )
 
     lines.append("")
@@ -433,15 +433,15 @@ def generate_bulletin(day: dict, day_label: str = "aujourd'hui"):
     # TEMPÉRATURES
 
     lines.append(_pick([
-        f"Les températures les plus élevées seront observées {max_loc} avec jusqu'à {max_t}°C.",
-        f"La chaleur se concentrera {max_loc} avec {max_t}°C attendus.",
-        f"{max_loc} enregistrera les valeurs les plus élevées avec {max_t}°C.",
+        f"Les températures les plus élevées seront observées {max_loc} avec jusqu'à {max_t}°.",
+        f"La chaleur se concentrera {max_loc} avec {max_t}° attendus.",
+        f"{max_loc} enregistrera les valeurs les plus élevées avec {max_t}°.",
     ]))
 
     lines.append(_pick([
-        f"Au réveil, il fera seulement {min_t}°C {min_loc}.",
-        f"La fraîcheur matinale sera surtout marquée {min_loc} avec {min_t}°C.",
-        f"Les températures les plus basses au petit matin seront relevées {min_loc} avec {min_t}°C.",
+        f"Au réveil, il fera seulement {min_t}° {min_loc}.",
+        f"La fraîcheur matinale sera surtout marquée {min_loc} avec {min_t}°.",
+        f"Les températures les plus basses au petit matin seront relevées {min_loc} avec {min_t}°.",
     ]))
 
     # VENT
