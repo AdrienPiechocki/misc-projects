@@ -13,3 +13,4 @@ selenium
 webdriver-manager
 requests
 trafilatura
+geopandas
