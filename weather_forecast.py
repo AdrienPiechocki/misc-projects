@@ -760,7 +760,7 @@ def generate_bulletin(day: dict, day_label: str = "aujourd'hui") -> str:
         loc = _smart_region_list(groups["sunny"])
         lines.append(_pick([
             f"Le soleil s'imposera {loc}, offrant de belles journées ensoleillées.",
-            f"Beau fixe {loc} avec un ciel largement dégagé tout au long de la journée.",
+            f"Beau temps {loc} avec un ciel largement dégagé tout au long de la journée.",
             f"Les habitants {loc} profiteront d'un ensoleillement généreux.",
         ]))
     elif groups["partly"]:
