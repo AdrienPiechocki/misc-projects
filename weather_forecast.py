@@ -249,7 +249,7 @@ class OpenMeteoClient:
                         hour = int(t[11:13])
 
                         # fenêtre "journée UTC"
-                        if hour == 12:
+                        if hour == 14:
                             day_temps.append(temp)
 
                 except:
@@ -823,7 +823,7 @@ def generate_bulletin(day: dict, day_label: str = "aujourd'hui") -> str:
 WEEK_INTROS = [
     "Bonjour à toutes et à tous. Voici votre point météo pour les cinq prochains jours.",
     "Bienvenue dans votre bulletin météo national. Regardons ensemble les tendances des prochains jours.",
-    "Bonjour et merci de nous rejoindre pour votre rendez-vous météo de la semaine.",
+    "Bonjour et merci de nous rejoindre pour votre rendez-vous météo des prochains jours.",
 ]
 
 TRANSITIONS = [
@@ -835,9 +835,9 @@ TRANSITIONS = [
 ]
 
 WEEK_OUTROS = [
-    "C'est la fin de ce bulletin météo. Excellente semaine à toutes et à tous.",
+    "C'est la fin de ce bulletin météo. Excellente journée à toutes et à tous.",
     "Merci de votre attention et à très bientôt pour un nouveau point météo.",
-    "Très bonne semaine à toutes et à tous et à bientôt.",
+    "Très bonne journée à toutes et à tous et à bientôt.",
 ]
 
 
