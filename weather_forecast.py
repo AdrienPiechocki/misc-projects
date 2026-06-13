@@ -153,8 +153,9 @@ class OpenMeteoClient:
         params = {
             "latitude": ",".join(str(p[0]) for p in coords),
             "longitude": ",".join(str(p[1]) for p in coords),
+            "hourly": "temperature_2m",
             "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode,wind_speed_10m_max",
-            "timezone": "auto"
+            "timezone": "UTC"
         }
 
         r = requests.get(self.WEATHER_URL, params=params)
@@ -230,13 +231,37 @@ class OpenMeteoClient:
                 if len(responses[i]["daily"]["temperature_2m_min"]) > day_idx
             ]
 
+            day_temps = []
+
+            for i in range(len(responses)):
+                try:
+                    hourly = responses[i]["hourly"]
+                    times = hourly["time"]
+                    temps = hourly["temperature_2m"]
+
+                    for t, temp in zip(times, temps):
+
+                        # filtre jour exact (UTC)
+                        if not t.startswith(date):
+                            continue
+
+                        # extraire heure UTC
+                        hour = int(t[11:13])
+
+                        # fenêtre "journée UTC"
+                        if hour == 12:
+                            day_temps.append(temp)
+
+                except:
+                    continue
+
             results.append({
                 "date": date,
                 "regions": reg_summary,
                 "avg_max": round(statistics.mean(all_tmax)) if all_tmax else None,
                 "avg_min": round(statistics.mean(all_tmin)) if all_tmin else None,
-                "max_abs": max(all_tmax) if all_tmax else None,
-                "min_abs": min(all_tmin) if all_tmin else None
+                "max_abs": max(day_temps) if day_temps else None,
+                "min_abs": min(day_temps) if day_temps else None
             })
 
         return results
@@ -405,13 +430,13 @@ def _amplitude_comment(min_abs: float, max_abs: float) -> str | None:
     amp = max_abs - min_abs
     if amp >= 18:
         return _pick([
-            f"L'amplitude thermique sera importante, entre {round(min_abs)} et {round(max_abs)}°.",
-            f"Attention aux écarts : {round(min_abs)}° la nuit, jusqu'à {round(max_abs)}° en journée.",
+            f"L'amplitude thermique sera importante, entre {round(min_abs)} et {round(max_abs)}° à midi, à l'échelle du pays.",
+            f"Attention aux écarts : de {round(min_abs)}° à {round(max_abs)}° en journée, en fonction des régions.",
         ])
     if amp >= 12:
         return _pick([
-            f"Les températures varieront entre {round(min_abs)} et {round(max_abs)}° selon les régions.",
-            f"On notera des contrastes sensibles, de {round(min_abs)} à {round(max_abs)}°.",
+            f"Les températures varieront entre {round(min_abs)} et {round(max_abs)}° à midi, selon les régions.",
+            f"En journée, on notera des contrastes sensibles, de {round(min_abs)} à {round(max_abs)}°.",
         ])
     return None
 
@@ -675,7 +700,7 @@ def generate_bulletin(day: dict, day_label: str = "aujourd'hui") -> str:
 
     lines.append(_pick([
         f"{_cap(day_label)}, le temps sera {sky_label} sur une grande partie du pays.",
-        f"Pour {day_label}, on attend un ciel {sky_label}, avec des journées {temp_qual}s.",
+        f"Pour {day_label}, on attend un ciel {sky_label}, avec une journée {temp_qual}s.",
         f"Au programme {day_label} : un temps {sky_label} et des températures {temp_qual}s.",
     ]))
 
