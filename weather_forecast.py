@@ -255,13 +255,40 @@ class OpenMeteoClient:
                 except:
                     continue
 
+            hottest_city = None
+            coldest_city = None
+
+            for i, pt in enumerate(region_points):
+                try:
+                    d = responses[i]["daily"]
+
+                    tmax = d["temperature_2m_max"][day_idx]
+                    tmin = d["temperature_2m_min"][day_idx]
+
+                    if hottest_city is None or tmax > hottest_city["temp"]:
+                        hottest_city = {
+                            "city": pt["city"],
+                            "temp": tmax
+                        }
+
+                    if coldest_city is None or tmin < coldest_city["temp"]:
+                        coldest_city = {
+                            "city": pt["city"],
+                            "temp": tmin
+                        }
+
+                except:
+                    pass
+
             results.append({
                 "date": date,
                 "regions": reg_summary,
                 "avg_max": round(statistics.mean(all_tmax)) if all_tmax else None,
                 "avg_min": round(statistics.mean(all_tmin)) if all_tmin else None,
                 "max_abs": max(day_temps) if day_temps else None,
-                "min_abs": min(day_temps) if day_temps else None
+                "min_abs": min(day_temps) if day_temps else None,
+                "hottest_city": hottest_city,
+                "coldest_city": coldest_city
             })
 
         return results
@@ -686,10 +713,11 @@ def generate_bulletin(day: dict, day_label: str = "aujourd'hui") -> str:
         ((k, v) for k, v in regions.items() if k != max_region[0]),
         key=lambda x: x[1]["t_min"]
     )
-    max_t   = max_region[1]["t_max"]
-    min_t   = min_region[1]["t_min"]
-    max_loc = _prep(max_region[0])
-    min_loc = _prep(min_region[0])
+    max_t = round(day["hottest_city"]["temp"])
+    min_t = round(day["coldest_city"]["temp"])
+
+    max_loc = f"à {day['hottest_city']['city']}"
+    min_loc = f"à {day['coldest_city']['city']}"
 
     temp_qual   = _temp_qualifier(avg_max)
     amplitude   = _amplitude_comment(min_abs, max_abs)
