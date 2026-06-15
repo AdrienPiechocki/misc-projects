@@ -452,21 +452,6 @@ def _temp_qualifier(t: float) -> str:
     if t >= 10:   return "fraîche"
     return "froide"
 
-def _amplitude_comment(min_abs: float, max_abs: float) -> str | None:
-    """Commentaire sur l'amplitude thermique si elle est notable."""
-    amp = max_abs - min_abs
-    if amp >= 18:
-        return _pick([
-            f"L'amplitude thermique sera importante, entre {round(min_abs)} et {round(max_abs)}° à midi, à l'échelle du pays.",
-            f"Attention aux écarts : de {round(min_abs)}° à {round(max_abs)}° en journée, en fonction des régions.",
-        ])
-    if amp >= 12:
-        return _pick([
-            f"Les températures varieront entre {round(min_abs)} et {round(max_abs)}° à midi, selon les régions.",
-            f"En journée, on notera des contrastes sensibles, de {round(min_abs)} à {round(max_abs)}°.",
-        ])
-    return None
-
 def _effective_sky(code: int, rain: float, t_max: float) -> int:
     """
     Corrige le code WMO d'une région en croisant pluie et température.
@@ -720,7 +705,6 @@ def generate_bulletin(day: dict, day_label: str = "aujourd'hui") -> str:
     min_loc = f"à {day['coldest_city']['city']}"
 
     temp_qual   = _temp_qualifier(avg_max)
-    amplitude   = _amplitude_comment(min_abs, max_abs)
 
     lines = []
 
@@ -737,9 +721,6 @@ def generate_bulletin(day: dict, day_label: str = "aujourd'hui") -> str:
         f"La température moyenne en journée atteindra {avg_max}°.",
         f"On retiendra une moyenne nationale de {avg_max}° en journée.",
     ]))
-
-    if amplitude:
-        lines.append(amplitude)
 
     lines.append("")
 
