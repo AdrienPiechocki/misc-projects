@@ -9,8 +9,6 @@ nltk
 scikit-learn
 numpy
 networkx
-selenium
-webdriver-manager
 requests
 trafilatura
 edge-tts
