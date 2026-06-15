@@ -81,7 +81,7 @@ def parse_args():
         help="Exclude games that have AT LEAST ONE of these tags")
 
     parser.add_argument("--list-tags", action="store_true",
-        help="Display all tags found in the results")
+        help="Display all steam tags")
 
     return parser.parse_args()
 
@@ -424,6 +424,14 @@ def presale_breakdown(appid, rankings):
 def main():
     args = parse_args()
 
+    tag_list = load_tags(Path("steam_tags.json").expanduser().resolve())
+    tag_map = build_tag_map(tag_list)
+
+    if args.list_tags:
+        for k in sorted(tag_map.keys()):
+            print(k)
+        return
+
     if not args.quiet:
         print("🎮 SteamDB Trending Engine\n")
         print(f"  Window   : {args.days} jours | Top releases : {args.top} | Top upcoming : {args.top_upcoming}")
@@ -436,17 +444,12 @@ def main():
             print("  ⚠️  Cache desactivated")
         print()
 
-    all_tags_seen = set()
-
     conn, cursor = init_db(args.db, clear=args.clear_cache)
     if args.clear_cache and not args.quiet:
         print("🗑️  Cache cleaned\n")
 
     if not args.quiet:
         print("🔍 Collecting AppIDs...")
-
-    tag_list = load_tags(Path("steam_tags.json").expanduser().resolve())
-    tag_map = build_tag_map(tag_list)
     
     appids, rankings = get_appids(
         args.filters,
@@ -499,7 +502,6 @@ def main():
             continue
 
         tags = extract_tags(details)
-        all_tags_seen.update(tags)
 
         if args.tags_exclude:
             if not tags_match(tags, args.tags_exclude):
@@ -572,11 +574,6 @@ def main():
         print_section("🔜 PRESALE — Coming soon", top_upcoming, args.quiet)
     else:
         print("\n  (No coming soon game found)\n")
-
-    if args.list_tags and all_tags_seen:
-        print("\n📋 Availiable tags in this section :\n")
-        for t in sorted(all_tags_seen):
-            print(f"  • {t}")
 
     # ----------------------------
     # EXPORT CSV
