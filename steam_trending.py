@@ -510,7 +510,7 @@ def main():
         entry = {
             "name": name,
             "appid": appid,
-            "release": release.strftime("%Y-%m-%d") if release else "À annoncer",
+            "release": release.strftime("%Y-%m-%d") if release else "Upcoming",
             "recommendations": pos,
             "coming_soon": is_coming_soon,
             "tags": tags_display(details),
