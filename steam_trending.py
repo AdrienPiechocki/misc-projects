@@ -10,6 +10,7 @@ import argparse
 import csv
 import sys
 import os
+import json
 
 STEAM_SEARCH = "https://store.steampowered.com/search/results/"
 STEAM_APP_DETAILS = "https://store.steampowered.com/api/appdetails"
@@ -210,8 +211,23 @@ def tags_display(details):
 # SCRAPER
 # ----------------------------
 
-def get_appids(filters, pages, rate_min, rate_max, quiet):
-    ids = set()
+def load_tags(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def build_tag_map(tag_list):
+    return {t["name"].lower(): t["id"] for t in tag_list}
+
+def build_tag_query(tag_map, names):
+    return ",".join(
+        str(tag_map[n.lower()])
+        for n in names
+        if n.lower() in tag_map
+    )
+
+def get_appids(filters, pages, rate_min, rate_max, quiet, tag_map, tag_names):
+
+    appids = set()
 
     rankings = {
         "upcoming": {},
@@ -220,35 +236,37 @@ def get_appids(filters, pages, rate_min, rate_max, quiet):
         "popularnew": {},
     }
 
+    tag_query = build_tag_query(tag_map, tag_names)
+    base_category = "998" # Game
+
     for f in filters:
         global_rank = 1
 
         for page in range(pages):
 
-            r = safe_get(
-                STEAM_SEARCH,
-                params={
-                    "query": "",
-                    "start": page * 50,
-                    "count": 50,
-                    "filter": f,
-                    "infinite": 1
-                }
-            )
+            params = {
+                "query": "",
+                "start": page * 50,
+                "count": 50,
+                "filter": f,
+                "infinite": 1,
+                "category1": base_category,
+            }
+
+            if tag_query:
+                params["tags"] = tag_query
+
+            r = safe_get(STEAM_SEARCH, params=params)
 
             if not r:
                 continue
 
             html_block = r.json().get("results_html", "")
 
-            found = re.findall(
-                r'data-ds-appid="(\d+)"',
-                html_block
-            )
+            found = re.findall(r'data-ds-appid="(\d+)"', html_block)
 
             for appid in found:
-
-                ids.add(appid)
+                appids.add(appid)
 
                 if f in rankings and appid not in rankings[f]:
                     rankings[f][appid] = global_rank
@@ -256,14 +274,11 @@ def get_appids(filters, pages, rate_min, rate_max, quiet):
                 global_rank += 1
 
             if not quiet:
-                print(
-                    f"  [{f}] page {page+1}/{pages} "
-                    f"— {len(found)} apps trouvées"
-                )
+                print(f"  [{f}] page {page+1}/{pages} — {len(found)} apps")
 
             throttle(rate_min, rate_max)
 
-    return list(ids), rankings
+    return list(appids), rankings
 
 
 def get_details(appid, conn, cursor, country, rate_min, rate_max, no_cache):
@@ -428,12 +443,18 @@ def main():
 
     if not args.quiet:
         print("🔍 Collecte des AppIDs...")
+
+    tag_list = load_tags("steam_tags.json")
+    tag_map = build_tag_map(tag_list)
+    
     appids, rankings = get_appids(
         args.filters,
         args.pages,
         args.rate_min,
         args.rate_max,
-        args.quiet
+        args.quiet,
+        tag_map,
+        args.tags_include
     )
     if not args.quiet:
         print(f"\n✅ {len(appids)} apps collectées\n")
