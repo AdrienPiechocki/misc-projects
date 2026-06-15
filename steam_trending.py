@@ -10,6 +10,8 @@ import argparse
 import csv
 import json
 import translator
+from pathlib import Path
+import scrape_steam_tags
 
 STEAM_SEARCH = "https://store.steampowered.com/search/results/"
 STEAM_APP_DETAILS = "https://store.steampowered.com/api/appdetails"
@@ -27,7 +29,7 @@ def parse_args():
     parser.add_argument("--days", "-d", type=int, default=7, metavar="N",
         help="Number of days back for the search window")
 
-    parser.add_argument("--top", "-k", type=int, default=100, metavar="N",
+    parser.add_argument("--top", "-t", type=int, default=100, metavar="N",
         help="Number of released games to display")
 
     parser.add_argument("--top-upcoming", type=int, default=100, metavar="N",
@@ -206,6 +208,8 @@ def tags_display(details):
 # ----------------------------
 
 def load_tags(path):
+    if not path.exists():
+        scrape_steam_tags.main()
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -343,7 +347,7 @@ def rank_points(rank):
 
     return 100 / math.sqrt(rank)
 
-def upcoming_hype_score(appid, rankings, details):
+def upcoming_presale_score(appid, rankings, details):
 
     upcoming_rank = rankings["upcoming"].get(appid)
 
@@ -382,10 +386,10 @@ def print_section(title, items, quiet):
             desc = ""
         clean_desc = html.unescape(desc)
         tags_line = f"      🏷️  {g['tags']}\n" if g.get("tags") else ""
-        score_label = "Hype" if g["coming_soon"] else "Score"
+        score_label = "Presale" if g["coming_soon"] else "Score"
         extra = ""
-        if g["coming_soon"] and g.get("hype_breakdown"):
-            extra = f"      📊 {g['hype_breakdown']}\n"
+        if g["coming_soon"] and g.get("presale_breakdown"):
+            extra = f"      📊 {g['presale_breakdown']}\n"
         print(
             f"{i:3d}. {g['name']}\n"
             f"      {score_label} : {g['score']}  |  Release : {g['release']}\n"
@@ -395,7 +399,7 @@ def print_section(title, items, quiet):
         )
 
 
-def hype_breakdown(appid, rankings):
+def presale_breakdown(appid, rankings):
     parts = []
 
     r = rankings["upcoming"].get(appid)
@@ -441,7 +445,7 @@ def main():
     if not args.quiet:
         print("🔍 Collecting AppIDs...")
 
-    tag_list = load_tags("steam_tags.json")
+    tag_list = load_tags(Path("steam_tags.json").expanduser().resolve())
     tag_map = build_tag_map(tag_list)
     
     appids, rankings = get_appids(
@@ -513,13 +517,13 @@ def main():
         }
 
         if is_coming_soon:
-            entry["score"] = upcoming_hype_score(
+            entry["score"] = upcoming_presale_score(
                 appid,
                 rankings,
                 details
             )
 
-            entry["hype_breakdown"] = hype_breakdown(
+            entry["presale_breakdown"] = presale_breakdown(
                 appid,
                 rankings
             )
@@ -530,7 +534,7 @@ def main():
 
             upcoming.append(entry)
             if args.verbose:
-                print(f"  🔜 {name} (hype={entry['score']} — {entry['hype_breakdown']})")
+                print(f"  🔜 {name} (presale={entry['score']} — {entry['presale_breakdown']})")
         else:
             ref_date = release if release else datetime.now()
             entry["score"] = round(released_score(pos, neg, ref_date), 2)
@@ -564,7 +568,7 @@ def main():
         print("\n  (No game released found)\n")
 
     if top_upcoming:
-        print_section("🔜 HYPE — Coming soon", top_upcoming, args.quiet)
+        print_section("🔜 PRESALE — Coming soon", top_upcoming, args.quiet)
     else:
         print("\n  (No game coming soon found)\n")
 
