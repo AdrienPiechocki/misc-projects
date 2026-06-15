@@ -8,9 +8,8 @@ import sqlite3
 import html
 import argparse
 import csv
-import sys
-import os
 import json
+import translator
 
 STEAM_SEARCH = "https://store.steampowered.com/search/results/"
 STEAM_APP_DETAILS = "https://store.steampowered.com/api/appdetails"
@@ -21,66 +20,66 @@ STEAM_APP_DETAILS = "https://store.steampowered.com/api/appdetails"
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="SteamDB Trending Engine — détecte les jeux tendance récents sur Steam.",
+        description="SteamDB Trending Engine — detects recent trending games on Steam.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
     parser.add_argument("--days", "-d", type=int, default=7, metavar="N",
-        help="Nombre de jours en arrière pour la fenêtre de recherche")
+        help="Number of days back for the search window")
 
     parser.add_argument("--top", "-k", type=int, default=100, metavar="N",
-        help="Nombre de jeux sortis à afficher")
+        help="Number of released games to display")
 
     parser.add_argument("--top-upcoming", type=int, default=100, metavar="N",
-        help="Nombre de coming soon à afficher dans leur section dédiée")
+        help="Number of upcoming games to display in their dedicated section")
 
     parser.add_argument("--min-reviews", type=int, default=1, metavar="N",
-        help="Nombre minimum d'avis pour inclure un jeu sorti")
+        help="Minimum number of reviews required to include a released game")
 
     parser.add_argument("--filters", nargs="+",
         default=["popularnew", "topsellers", "comingsoon", "upcoming"],
         choices=["popularnew", "topsellers", "comingsoon", "upcoming", "mostplayed"],
-        metavar="FILTRE",
-        help="Filtres Steam à utiliser")
+        metavar="FILTER",
+        help="Steam filters to use")
 
     parser.add_argument("--pages", type=int, default=6, metavar="N",
-        help="Nombre de pages à scraper par filtre (50 apps/page)")
+        help="Number of pages to scrape per filter (50 apps/page)")
 
     parser.add_argument("--rate-min", type=float, default=0.6, metavar="SEC",
-        help="Délai minimum entre les requêtes (secondes)")
+        help="Minimum delay between requests (seconds)")
 
     parser.add_argument("--rate-max", type=float, default=1.8, metavar="SEC",
-        help="Délai maximum entre les requêtes (secondes)")
+        help="Maximum delay between requests (seconds)")
 
-    parser.add_argument("--db", default="steam_cache.db", metavar="FICHIER",
-        help="Chemin vers la base SQLite de cache")
+    parser.add_argument("--db", default="steam_cache.db", metavar="FILE",
+        help="Path to the SQLite cache database")
 
     parser.add_argument("--no-cache", action="store_true",
-        help="Ignorer le cache et forcer le rechargement depuis l'API")
+        help="Ignore cache and force reloading from the API")
 
     parser.add_argument("--clear-cache", action="store_true",
-        help="Vider le cache avant de lancer le scraping")
+        help="Clear cache before running scraping")
 
-    parser.add_argument("--output", "-o", metavar="FICHIER.csv",
-        help="Exporter les résultats dans un fichier CSV (les deux sections)")
+    parser.add_argument("--output", "-o", metavar="FILE.csv",
+        help="Export results to a CSV file (both sections)")
 
-    parser.add_argument("--country", default="fr", metavar="CC",
-        help="Code pays pour les prix Steam (ex: fr, us, de)")
+    parser.add_argument("--lang", "-l", default="en", metavar="CC",
+        help="Language code for Steam descriptions (e.g., fr, en, de)")
 
     parser.add_argument("--quiet", "-q", action="store_true",
-        help="Afficher uniquement le classement final")
+        help="Show only the final ranking")
 
     parser.add_argument("--verbose", "-v", action="store_true",
-        help="Afficher les détails de chaque app traitée")
+        help="Show details for each processed app")
 
     parser.add_argument("--tags-include", nargs="+", metavar="TAG", default=[],
-        help="Inclure uniquement les jeux possédant TOUS ces tags")
+        help="Include only games that have ALL of these tags")
 
     parser.add_argument("--tags-exclude", nargs="+", metavar="TAG", default=[],
-        help="Exclure les jeux possédant AU MOINS UN de ces tags")
+        help="Exclude games that have AT LEAST ONE of these tags")
 
     parser.add_argument("--list-tags", action="store_true",
-        help="Afficher tous les tags trouvés dans les résultats")
+        help="Display all tags found in the results")
 
     return parser.parse_args()
 
@@ -276,11 +275,11 @@ def get_appids(filters, pages, rate_min, rate_max, quiet, tag_map, tag_names):
     return list(appids), rankings
 
 
-def get_details(appid, conn, cursor, country, rate_min, rate_max, no_cache):
+def get_details(appid, conn, cursor, lang, rate_min, rate_max, no_cache):
     cached = cache_get(cursor, appid, no_cache)
     if cached:
         return cached
-    r = safe_get(STEAM_APP_DETAILS, params={"appids": appid, "cc": country, "l": "en"})
+    r = safe_get(STEAM_APP_DETAILS, params={"appids": appid, "cc": lang, "l": "en"})
     if not r:
         return None
     try:
@@ -375,10 +374,13 @@ def upcoming_hype_score(appid, rankings, details):
 def print_section(title, items, quiet):
     if not quiet:
         print(f"\n{'='*60}")
-        print(f"  {title}  ({len(items)} jeux)")
+        print(f"  {title}  ({len(items)} games)")
         print(f"{'='*60}\n")
     for i, g in enumerate(items, 1):
-        clean_desc = html.unescape(g["description"])
+        desc = g.get("description")
+        if not isinstance(desc, str):
+            desc = ""
+        clean_desc = html.unescape(desc)
         tags_line = f"      🏷️  {g['tags']}\n" if g.get("tags") else ""
         score_label = "Hype" if g["coming_soon"] else "Score"
         extra = ""
@@ -386,10 +388,10 @@ def print_section(title, items, quiet):
             extra = f"      📊 {g['hype_breakdown']}\n"
         print(
             f"{i:3d}. {g['name']}\n"
-            f"      {score_label} : {g['score']}  |  Sortie : {g['release']}\n"
+            f"      {score_label} : {g['score']}  |  Release : {g['release']}\n"
             f"{tags_line}"
             f"{extra}"
-            f"      {clean_desc}\n"
+            f"      📝 {clean_desc}\n"
         )
 
 
@@ -420,24 +422,24 @@ def main():
 
     if not args.quiet:
         print("🎮 SteamDB Trending Engine\n")
-        print(f"  Fenêtre   : {args.days} jours | Top sortis : {args.top} | Top upcoming : {args.top_upcoming}")
-        print(f"  Filtres   : {', '.join(args.filters)} | Pages/filtre : {args.pages} | Pays : {args.country}")
+        print(f"  Window   : {args.days} jours | Top releases : {args.top} | Top upcoming : {args.top_upcoming}")
+        print(f"  Filters   : {', '.join(args.filters)} | Pages/filter : {args.pages} | Language : {args.lang}")
         if args.tags_include:
-            print(f"  🏷️  Tags requis : {', '.join(args.tags_include)}")
+            print(f"  🏷️  Required tags : {', '.join(args.tags_include)}")
         if args.tags_exclude:
-            print(f"  🚫 Tags exclus : {', '.join(args.tags_exclude)}")
+            print(f"  🚫 Excluded tags : {', '.join(args.tags_exclude)}")
         if args.no_cache:
-            print("  ⚠️  Cache désactivé")
+            print("  ⚠️  Cache desactivated")
         print()
 
     all_tags_seen = set()
 
     conn, cursor = init_db(args.db, clear=args.clear_cache)
     if args.clear_cache and not args.quiet:
-        print("🗑️  Cache vidé\n")
+        print("🗑️  Cache cleaned\n")
 
     if not args.quiet:
-        print("🔍 Collecte des AppIDs...")
+        print("🔍 Collecting AppIDs...")
 
     tag_list = load_tags("steam_tags.json")
     tag_map = build_tag_map(tag_list)
@@ -452,14 +454,14 @@ def main():
         args.tags_include
     )
     if not args.quiet:
-        print(f"\n✅ {len(appids)} apps collectées\n")
+        print(f"\n✅ {len(appids)} games collected\n")
 
     released = []
     upcoming = []
     cutoff = datetime.now() - timedelta(days=args.days)
 
     for appid in appids:
-        details = get_details(appid, conn, cursor, args.country, args.rate_min, args.rate_max, args.no_cache)
+        details = get_details(appid, conn, cursor, args.lang, args.rate_min, args.rate_max, args.no_cache)
         if not details:
             continue
         if details.get("type") != "game":
@@ -497,7 +499,7 @@ def main():
         if args.tags_exclude:
             if not tags_match(tags, args.tags_exclude):
                 if args.verbose:
-                    print(f"  ✗ {name} — tags exclus")
+                    print(f"  ✗ {name} — excluded tags")
                 continue
         
         entry = {
@@ -507,7 +509,7 @@ def main():
             "recommendations": pos,
             "coming_soon": is_coming_soon,
             "tags": tags_display(details),
-            "description": details.get("short_description", ""),
+            "description": translator.translate_stream([details.get("short_description", "")], args.lang),
         }
 
         if is_coming_soon:
@@ -534,7 +536,7 @@ def main():
             entry["score"] = round(released_score(pos, neg, ref_date), 2)
             released.append(entry)
             if args.verbose:
-                print(f"  ✓ {name} (score={entry['score']}, avis={pos})")
+                print(f"  ✓ {name} (score={entry['score']}, reviews={pos})")
 
     # ----------------------------
     # CLASSEMENT
@@ -554,20 +556,20 @@ def main():
     top_upcoming = upcoming[:args.top_upcoming]
 
     if not args.quiet:
-        print(f"  {len(released)} jeux sortis éligibles | {len(upcoming)} coming soon trouvés\n")
+        print(f"  {len(released)} released games found | {len(upcoming)} games coming soon found\n")
 
     if top_released:
-        print_section("🔥 TRENDING — Jeux sortis", top_released, args.quiet)
+        print_section("🔥 TRENDING — Released games", top_released, args.quiet)
     else:
-        print("\n  (aucun jeu sorti dans la fenêtre)\n")
+        print("\n  (No game released found)\n")
 
     if top_upcoming:
         print_section("🔜 HYPE — Coming soon", top_upcoming, args.quiet)
     else:
-        print("\n  (aucun coming soon trouvé)\n")
+        print("\n  (No game coming soon found)\n")
 
     if args.list_tags and all_tags_seen:
-        print("\n📋 Tags disponibles dans cette sélection :\n")
+        print("\n📋 Availiable tags in this section :\n")
         for t in sorted(all_tags_seen):
             print(f"  • {t}")
 
@@ -586,7 +588,7 @@ def main():
             writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(all_results)
-        print(f"\n💾 Résultats exportés dans {args.output}")
+        print(f"\n💾 Exported results in {args.output}")
 
     conn.close()
 
