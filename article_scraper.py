@@ -9,15 +9,21 @@ from playwright.sync_api import sync_playwright
 import trafilatura
 
 def clean_text(raw_text: str) -> str:
-    """Nettoie les doublons et les lignes vides."""
     paragraphs = raw_text.split('\n')
     unique_paragraphs = []
     seen = set()
+    skip = False
     for p in paragraphs:
         p_clean = p.strip()
-        if p_clean and p_clean not in seen:
-            unique_paragraphs.append(p_clean)
-            seen.add(p_clean)
+        if not p_clean:
+            continue
+        # Stoppe à la section "À regarder" / commentaires
+        if p_clean in ("À regarder", "Commentaires"):
+            break
+        if p_clean in seen or p_clean == "-":
+            continue
+        unique_paragraphs.append(p_clean)
+        seen.add(p_clean)
     return "\n".join(unique_paragraphs)
 
 def fetch_article(url: str) -> str:
@@ -33,7 +39,10 @@ def fetch_article(url: str) -> str:
 
     text = trafilatura.extract(
         html,
-        favor_precision=True
+        favor_precision=True,
+        include_comments=False,
+        include_links=False,
+        fast=True,
     )
     return clean_text(text)
 
