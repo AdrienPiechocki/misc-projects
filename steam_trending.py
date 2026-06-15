@@ -566,12 +566,12 @@ def main():
     if top_released:
         print_section("🔥 TRENDING — Released games", top_released, args.quiet)
     else:
-        print("\n  (No game released found)\n")
+        print("\n  (No released game found)\n")
 
     if top_upcoming:
         print_section("🔜 PRESALE — Coming soon", top_upcoming, args.quiet)
     else:
-        print("\n  (No game coming soon found)\n")
+        print("\n  (No coming soon game found)\n")
 
     if args.list_tags and all_tags_seen:
         print("\n📋 Availiable tags in this section :\n")
