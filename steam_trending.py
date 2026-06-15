@@ -561,7 +561,7 @@ def main():
     top_upcoming = upcoming[:args.top_upcoming]
 
     if not args.quiet:
-        print(f"  {len(released)} released games found | {len(upcoming)} games coming soon found\n")
+        print(f"  found {len(released)} released games | found {len(upcoming)} coming soon games \n")
 
     if top_released:
         print_section("🔥 TRENDING — Released games", top_released, args.quiet)
