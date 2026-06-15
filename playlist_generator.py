@@ -7,8 +7,8 @@ Dépendances :
     pip install mutagen librosa numpy
 
 Usage :
-    python playlist_generator.py --folder /chemin/vers/musiques
-    python playlist_generator.py --folder ./music --output ./playlists
+    python playlist_generator.py -i /chemin/vers/musiques
+    python playlist_generator.py --input ./music --output ./playlists
 """
 
 import re
@@ -156,21 +156,39 @@ def classify_mood(f: dict) -> str:
 def generate_playlists(tracks: list, output_dir: Path):
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    by_mood:      dict = {}
+    by_mood:   dict = {}
+    by_genre:  dict = {}
+    by_author: dict = {}
 
     for t in tracks:
-        mood      = t.get("mood", "unknown")
+        mood   = t.get("mood", "unknown")
+        genre  = t.get("genre", "").strip() or "unknown"
+        author = t.get("artist", "").strip() or "unknown"
         by_mood.setdefault(mood, []).append(t)
+        by_genre.setdefault(genre, []).append(t)
+        by_author.setdefault(author, []).append(t)
 
     mood_dir = output_dir / "by_mood"
     mood_dir.mkdir(exist_ok=True)
     for mood, group in sorted(by_mood.items()):
         _write_m3u(mood_dir / f"{_safe(mood)}.m3u", group, f"Mood: {mood}")
 
+    genre_dir = output_dir / "by_genre"
+    genre_dir.mkdir(exist_ok=True)
+    for genre, group in sorted(by_genre.items()):
+        _write_m3u(genre_dir / f"{_safe(genre)}.m3u", group, f"Genre: {genre}")
+
+    author_dir = output_dir / "by_author"
+    author_dir.mkdir(exist_ok=True)
+    for author, group in sorted(by_author.items()):
+        _write_m3u(author_dir / f"{_safe(author)}.m3u", group, f"Artist: {author}")
+
     _write_m3u(output_dir / "all_tracks.m3u", tracks, "All tracks")
 
     print(f"\n📁 Playlists générées dans : {output_dir}")
-    print(f"   🎭 {len(by_mood)} mood(s)  : {', '.join(sorted(by_mood))}")
+    print(f"   🎭 {len(by_mood)} mood(s)   : {', '.join(sorted(by_mood))}")
+    print(f"   🎸 {len(by_genre)} genre(s)  : {', '.join(sorted(by_genre))}")
+    print(f"   🎤 {len(by_author)} author(s) : {', '.join(sorted(by_author))}")
 
 
 def _write_m3u(path: Path, tracks: list, title: str):
@@ -217,13 +235,13 @@ def save_cache(cache_file: Path, cache: dict):
 
 def main():
     parser = argparse.ArgumentParser(description="🎵 Game Music Playlist Generator")
-    parser.add_argument("--folder",      required=True, help="Dossier contenant les .mp3")
+    parser.add_argument("-i", "--input",      required=True, help="Dossier contenant les .mp3")
     parser.add_argument("--output",      default="playlists", help="Dossier de sortie")
     parser.add_argument("--no-audio",    action="store_true", help="Désactiver l'analyse librosa")
     parser.add_argument("--clear-cache", action="store_true", help="Vider le cache")
     args = parser.parse_args()
 
-    folder = Path(args.folder).expanduser().resolve()
+    folder = Path(args.input).expanduser().resolve()
     output = Path(args.output).expanduser().resolve()
 
     if not folder.exists():
