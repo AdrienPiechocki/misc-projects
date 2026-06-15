@@ -394,7 +394,7 @@ def print_section(title, items, quiet):
             f"      {score_label} : {g['score']}  |  Sortie : {g['release']}\n"
             f"{tags_line}"
             f"{extra}"
-            f"      {clean_desc[:120]}{'…' if len(clean_desc) > 120 else ''}\n"
+            f"      {clean_desc}\n"
         )
 
 
@@ -499,12 +499,13 @@ def main():
         tags = extract_tags(details)
         all_tags_seen.update(tags)
 
-        if args.tags_include or args.tags_exclude:
-            if not tags_match(tags, args.tags_include, args.tags_exclude):
-                if args.verbose:
-                    print(f"  ✗ {name} — tags exclus/manquants")
-                continue
-
+        if args.tags_exclude:
+            for t in args.tags_exclude:
+                if t.lower() in tags:
+                    if args.verbose:
+                        print(f"  ✗ {name} — tags exclus")
+                    continue
+        
         entry = {
             "name": name,
             "appid": appid,
