@@ -459,6 +459,7 @@ def main():
     )
     if not args.quiet:
         print(f"\n✅ {len(appids)} games collected\n")
+        print("\nWriting to database and generating lists...\n")
 
     released = []
     upcoming = []
