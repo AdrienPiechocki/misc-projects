@@ -19,6 +19,10 @@ A collection of lightweight, efficient, and specialized Python tools for web scr
 * **Summarizer Engine (`summarizer.py`)**: A core module implementing the TextRank algorithm. It segments text, computes similarity matrices using TF-IDF and cosine similarity, and ranks sentences to produce concise summaries.
 * **Article Summarizer (`summarize_article.py`)**: A CLI tool that combines the Article Scraper and the Summarizer Engine to fetch an online article and generate a paragraph-by-paragraph summary.
 
+### 4. Steam Tools
+
+* **Steam Trending Engine (`steam_trending.py`)**: Scrapes the Steam store to detect trending and upcoming games. Produces two ranked lists: recently released games scored by review velocity and approval ratio, and upcoming games scored by their position across Steam's presale charts (`upcoming`, `comingsoon`, `topsellers`). Results can be filtered by tags, exported to CSV, and are cached locally via SQLite to reduce API load.
+
 ---
 
 ## Getting Started
@@ -85,6 +89,27 @@ python playlis_generator.py --folder "/home/user/Music/Jazz" --output "./playlis
 
 ```bash
 python summarize_article.py "https://news.com/long-article" --ratio 0.3
+```
+
+### 4. Steam Tools
+
+* **`steam_trending.py`**
+* *Basic run:* Detect trending games released in the last 7 days and the top 20 upcoming games, with descriptions in French.
+
+```bash
+python steam_trending.py --days 7 --top 20 --top-upcoming 20 --lang fr
+```
+
+* *Filtered by tags:* Show only RPG games, excluding Early Access, with a minimum of 10 reviews, and export to CSV.
+
+```bash
+python steam_trending.py --tags-include RPG --tags-exclude "early access" --min-reviews 10 --output results.csv
+```
+
+* *Full verbose run:* Scrape 10 pages per filter, force-refresh the cache, and display per-game details.
+
+```bash
+python steam_trending.py --pages 10 --clear-cache --verbose
 ```
 
 ---
