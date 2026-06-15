@@ -218,9 +218,9 @@ def build_tag_map(tag_list):
 
 def build_tag_query(tag_map, names):
     return ",".join(
-        str(tag_map[n.lower()])
+        str(tag_map[n.lower().replace(" ", "-")])
         for n in names
-        if n.lower() in tag_map
+        if n.lower().replace(" ", "-") in tag_map
     )
 
 def get_appids(filters, pages, rate_min, rate_max, quiet, tag_map, tag_names):
