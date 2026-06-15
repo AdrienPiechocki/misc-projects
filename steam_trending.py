@@ -186,15 +186,10 @@ def extract_tags(details):
     return tags
 
 
-def tags_match(tags, include, exclude):
-    if include:
-        for t in include:
-            if t.lower() not in tags:
-                return False
-    if exclude:
-        for t in exclude:
-            if t.lower() in tags:
-                return False
+def tags_match(tags, exclude):
+    for t in exclude:
+        if t.lower() in tags:
+            return False
     return True
 
 
@@ -500,11 +495,10 @@ def main():
         all_tags_seen.update(tags)
 
         if args.tags_exclude:
-            for t in args.tags_exclude:
-                if t.lower() in tags:
-                    if args.verbose:
-                        print(f"  ✗ {name} — tags exclus")
-                    continue
+            if not tags_match(tags, args.tags_exclude):
+                if args.verbose:
+                    print(f"  ✗ {name} — tags exclus")
+                continue
         
         entry = {
             "name": name,
