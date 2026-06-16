@@ -13,3 +13,4 @@ requests
 trafilatura
 edge-tts
 argostranslate
+langdetect

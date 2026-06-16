@@ -12,6 +12,7 @@ import json
 import translator
 from pathlib import Path
 import scrape_steam_tags
+import dateparser
 
 STEAM_SEARCH = "https://store.steampowered.com/search/results/"
 STEAM_APP_DETAILS = "https://store.steampowered.com/api/appdetails"
@@ -126,16 +127,32 @@ def cache_set(conn, cursor, appid, data):
 # REQUÊTES
 # ----------------------------
 
-BASE_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122 Safari/537.36",
-    "Accept-Language": "en-US,en;q=0.9",
-}
+def normalize_lang(lang):
+    mapping = {
+        "en": "en-US",
+        "fr": "fr-FR",
+        "de": "de-DE",
+        "es": "es-ES",
+        "it": "it-IT",
+        "pt": "pt-BR",
+        "ru": "ru-RU",
+        "zh": "zh-CN",
+        "ja": "ja-JP",
+        "ko": "ko-KR",
+    }
+    return mapping.get(lang, lang)
+
+def build_headers(lang):
+    return {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122 Safari/537.36",
+        "Accept-Language": f"{lang},{lang};q=0.9,en;q=0.8"
+    }
 
 
-def safe_get(url, params=None, retries=3):
+def safe_get(url, params=None, retries=3, headers=None):
     for i in range(retries):
         try:
-            r = requests.get(url, headers=BASE_HEADERS, params=params, timeout=20)
+            r = requests.get(url, headers=headers, params=params, timeout=20)
             if r.status_code in [429, 403]:
                 time.sleep((2 ** i) + random.uniform(1, 3))
                 continue
@@ -162,13 +179,10 @@ def log(x):
 def parse_date(s):
     if not s:
         return None
-    for fmt in ["%d %b, %Y", "%b %d, %Y"]:
-        try:
-            return datetime.strptime(s, fmt)
-        except Exception:
-            pass
-    return None
-
+    try:
+        return dateparser.parse(s)
+    except (ValueError, TypeError):
+        return None
 
 # ----------------------------
 # TAGS
@@ -223,7 +237,7 @@ def build_tag_query(tag_map, names):
         if n.lower().replace(" ", "-") in tag_map
     )
 
-def get_appids(filters, pages, rate_min, rate_max, quiet, tag_map, tag_names):
+def get_appids(filters, pages, rate_min, rate_max, quiet, tag_map, tag_names, headers):
 
     appids = set()
 
@@ -254,7 +268,7 @@ def get_appids(filters, pages, rate_min, rate_max, quiet, tag_map, tag_names):
             if tag_query:
                 params["tags"] = tag_query
 
-            r = safe_get(STEAM_SEARCH, params=params)
+            r = safe_get(STEAM_SEARCH, params=params, headers=headers)
 
             if not r:
                 continue
@@ -279,11 +293,11 @@ def get_appids(filters, pages, rate_min, rate_max, quiet, tag_map, tag_names):
     return list(appids), rankings
 
 
-def get_details(appid, conn, cursor, lang, rate_min, rate_max, no_cache):
+def get_details(appid, conn, cursor, lang, rate_min, rate_max, no_cache, headers):
     cached = cache_get(cursor, appid, no_cache)
     if cached:
         return cached
-    r = safe_get(STEAM_APP_DETAILS, params={"appids": appid, "cc": lang, "l": "en"})
+    r = safe_get(STEAM_APP_DETAILS, params={"appids": appid, "l": lang}, headers=headers)
     if not r:
         return None
     try:
@@ -424,6 +438,9 @@ def presale_breakdown(appid, rankings):
 def main():
     args = parse_args()
 
+    lang = normalize_lang(args.lang)
+    headers = build_headers(lang)
+
     tag_list = load_tags(Path("steam_tags.json").expanduser().resolve())
     tag_map = build_tag_map(tag_list)
 
@@ -458,7 +475,8 @@ def main():
         args.rate_max,
         args.quiet,
         tag_map,
-        args.tags_include
+        args.tags_include,
+        headers
     )
     if not args.quiet:
         print(f"\n✅ {len(appids)} games collected\n")
@@ -469,7 +487,17 @@ def main():
     cutoff = datetime.now() - timedelta(days=args.days)
 
     for appid in appids:
-        details = get_details(appid, conn, cursor, args.lang, args.rate_min, args.rate_max, args.no_cache)
+        details = get_details(
+            appid,
+            conn,
+            cursor,
+            args.lang,
+            args.rate_min,
+            args.rate_max,
+            args.no_cache,
+            headers
+        )
+
         if not details:
             continue
         if details.get("type") != "game":
@@ -482,13 +510,12 @@ def main():
         release = parse_date(details.get("release_date", {}).get("date", ""))
         is_coming_soon = details.get("release_date", {}).get("coming_soon", False)
 
-        # Fenêtre temporelle : coming soon sans date → toujours inclus
-        if not is_coming_soon:
-            if not release or release < cutoff:
+        if is_coming_soon:
+            if release and release < cutoff:
                 continue
-        elif release and release < cutoff:
-            # coming soon dont la date annoncée est déjà passée → ignorer
-            continue
+        else:
+            if release and release < cutoff:
+                continue
 
         is_free = details.get("is_free")
         has_price = details.get("price_overview")
@@ -509,6 +536,11 @@ def main():
                     print(f"  ✗ {name} — excluded tags")
                 continue
         
+        desc = translator.translate_stream(
+            [details.get("short_description", "")],
+            args.lang
+        )
+
         entry = {
             "name": name,
             "appid": appid,
@@ -516,7 +548,7 @@ def main():
             "recommendations": pos,
             "coming_soon": is_coming_soon,
             "tags": tags_display(details),
-            "description": translator.translate_stream([details.get("short_description", "")], args.lang),
+            "description": desc,
         }
 
         if is_coming_soon:

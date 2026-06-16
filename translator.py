@@ -91,7 +91,7 @@ def translate_stream(text, to_lang):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("text", nargs="?")
+    parser.add_argument("text")
     parser.add_argument("-l", "--lang", default="en")
 
     args = parser.parse_args()
