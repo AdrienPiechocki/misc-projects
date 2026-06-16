@@ -5,7 +5,9 @@ import argparse
 from pathlib import Path
 
 async def generate_audio_and_subs(text, path, name, voice: str = "fr-FR-HenriNeural"):
-    communicate = edge_tts.Communicate(text, voice)
+    clean_text = re.sub(r'[®™©]', '', text)
+    clean_text = clean_text.replace('€', ' euros')
+    communicate = edge_tts.Communicate(clean_text, voice)
     submaker = edge_tts.SubMaker()
 
     with open(f"{path}{name}.wav", "wb") as f:

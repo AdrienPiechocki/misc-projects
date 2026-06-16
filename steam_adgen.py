@@ -164,34 +164,34 @@ TAG_PHRASES = {
 # -- Phrases de score/tendance
 SCORE_PHRASES = {
     "viral":    [  # score > 80
-        "Le score de tendance explose. {name} est en train de devenir viral.",
+        "Le score de tendance explose! {name} est en train de devenir viral.",
         "Difficile d'ignorer {name} quand les chiffres s'emballent comme ça.",
-        "Tendance maximale. Tout Steam en parle.",
+        "Tendance maximale! Tout Steam en parle.",
     ],
     "hot":      [  # score 40-80
-        "Un score de tendance solide — {name} monte en puissance.",
-        "En pleine ascension sur Steam.",
-        "Les joueurs se l'arrachent en ce moment.",
+        "Un score de tendance solide — {name} monte en puissance!",
+        "En pleine ascension sur Steam!",
+        "Les joueurs se l'arrachent en ce moment!",
     ],
     "rising":   [  # score 10-40
         "Un jeu qui commence à faire parler de lui.",
         "La communauté commence à s'y intéresser sérieusement.",
-        "À surveiller de près — la tendance est à la hausse.",
+        "À surveiller de près — la tendance est à la hausse!",
     ],
     "fresh":    [  # score < 10
         "Tout juste sorti, déjà dans les radars.",
-        "Un jeu récent qui mérite le coup d'œil.",
-        "Encore peu connu, mais ça ne devrait pas durer.",
+        "Un jeu récent qui mérite le coup d'œil!",
+        "Encore peu connu, mais ça ne devrait pas durer!",
     ],
 }
 
 # -- Appels à l'action de clôture
 CTAS = [
     "Disponible maintenant sur Steam.",
-    "Lancez Steam et foncez.",
+    "Lancez Steam et foncez!",
     "Votre prochain jeu vous attend sur Steam.",
-    "Ajoutez-le à votre bibliothèque dès aujourd'hui.",
-    "Ne le laissez pas passer.",
+    "Ajoutez-le à votre bibliothèque dès aujourd'hui!",
+    "Ne le laissez pas passer!",
     "Retrouvez {name} sur Steam.",
     "Foncez sur la page Steam de {name} — vous ne le regretterez pas.",
     "La page Steam n'attend que vous.",
@@ -199,10 +199,10 @@ CTAS = [
 
 # -- CTA pour les coming soon
 CTAS_UPCOMING = [
-    "Ajoutez-le à votre wishlist dès maintenant sur Steam.",
+    "Ajoutez-le à votre wishlist dès maintenant sur Steam!",
     "Ne manquez pas la sortie — wishlistez {name} sur Steam.",
     "Suivez {name} sur Steam pour être notifié à sa sortie.",
-    "Soyez parmi les premiers informés : wishlistez {name}.",
+    "Soyez parmi les premiers informés : wishlistez {name}!",
 ]
 
 
@@ -274,8 +274,9 @@ def generate_ad(game: dict) -> str:
         parts.append(pick(HOOKS_GENERIC))
 
     # 2. Phrase de tendance
-    tier = classify_score(score)
-    parts.append(pick(SCORE_PHRASES[tier], name=name, score=score))
+    if not coming_soon:
+        tier = classify_score(score)
+        parts.append(pick(SCORE_PHRASES[tier], name=name, score=score))
 
     # 3. Phrases liées aux tags (0, 1 ou 2 phrases)
     tag_lines = find_tag_phrases(tags, name)
@@ -313,8 +314,7 @@ def render_text(games: list[dict]) -> str:
         # lines.append("")
         # Wrap à 68 caractères
         for para in ad.split("  "):
-            wrapped = textwrap.fill(para.strip(), width=68, initial_indent="  ", subsequent_indent="  ")
-            lines.append(wrapped)
+            lines.append(para)
         lines.append("")
     # lines.append(f"{'─'*70}")
     return "\n".join(lines)
